@@ -5,11 +5,7 @@ Python library to access Cypress CY7C65211 USB-to-GPIO/SPI/I2C chip.
 Also includes library to access Nordic nRF24L01 wireless tranceiver
 over (USB-to-)SPI interface.
 
-## Note
-This requires cyusbserial.dll (or libcyusbserial.so) library
-provided by Cypress.
-
-## Usage
+## Usage (CY7C65211)
 
     >>> from cy7c65211 import CyUSBSerial, CyGPIO, CySPI
     >>> 
@@ -34,5 +30,22 @@ provided by Cypress.
     >>> spi = CySPI(dev)
     >>> ret = spi.send("any-data-to-be-clocked-out")
 
-Current development focuses on GPIO and SPI feature to use Nordic
-nRF24 wireless tranceiver chip. See sample script nrf24-test.py for the detail.
+## Usage (nRF24L01)
+
+    >>> from nrf24 import *
+    >>> 
+    >>> tx = nRF24(CySPI(dev), CE=CyGPIO(dev).pin(0))
+    >>> tx.reset(MODE_SB|DIR_SEND)
+    >>> tx.TX_ADDR = tx.RX_ADDR_P0 = 0xB3B4B5B6C2
+    >>> tx.send("some-payload-len-of-max-32-bytes")
+    >>>
+    >>> print tx.FIFO_STATUS.TX_EMPTY
+    >>> print tx.CONFIG
+
+## Note
+This requires cyusbserial.dll (or libcyusbserial.so) library
+provided by Cypress.
+
+Current development focuses on GPIO and SPI features to
+use Nordic nRF24 wireless tranceiver chip. See sample script
+nrf24-test.py for the detail.
