@@ -136,6 +136,82 @@ class CyUSBSerialDevice(object):
 
 ######################################################################
 
+class CyI2C(SPI):
+    def __init__(self, dev):
+        if not isinstance(dev, CyUSBSerialDevice):
+            msg = "ERROR: Not a CyUSBSerialDevice object: %s" % str(dev)
+            raise Exception(msg)
+        self.dev = dev
+
+    def set_config(self, config):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+        cfg = ffi.new("CY_I2C_CONFIG *", config)
+        return dev.CySetI2cConfig(cfg)
+
+    def get_config(self):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+
+        cfg = ffi.new("CY_I2C_CONFIG *")
+        rc  = dev.CyGetI2cConfig(cfg)
+        if rc != api.CY_SUCCESS:
+            raise Exception("ERROR: CyGetI2cConfig=%d" % rc)
+
+        ret = {}
+        for k, v in ffi.typeof(cfg[0]).fields:
+            ret[k] = getattr(cfg, k)
+        return ret
+
+    def prepare(self, slaveAddress, isStopBit=1, isNakBit=0):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+
+        cfg = ffi.new("CY_I2C_DATA_CONFIG *",
+                      (slaveAddress, isStopBit, isNakBit))
+        return cfg
+
+    def reset(self, resetMode=0):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+
+        rc = dev.CyI2cReset(resetMode)
+        print("rc=%d" % rc)
+
+    def read(self, cfg, data, timeout=1000):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+
+        rlen = len(data)
+        rbuf = ffi.new("UCHAR[%d]" % rlen)
+        rcdb = ffi.new("CY_DATA_BUFFER *", (rbuf, rlen, 0))
+
+        rc = dev.CyI2cRead(cfg, rcdb, timeout)
+
+        if self.debug:
+            print "r:", " ".join(["{:08b}".format(i) for i in rbuf])
+
+        return bytearray(ffi.buffer(rcdb.buffer, rcdb.transferCount)[0:])
+
+    def write(self, cfg, data, timeout=1000):
+        dev = self.dev
+        ffi = dev.lib.ffi
+        api = dev.lib.api
+
+        wlen = len(data)
+        wbuf = ffi.new("UCHAR[%d]" % wlen, str(data))
+        wcdb = ffi.new("CY_DATA_BUFFER *", (wbuf, wlen, 0))
+
+        rc = dev.CyI2cWrite(cfg, wcdb, timeout)
+        return rc
+
+######################################################################
+
 class CySPI(SPI):
     MOTOROLA = TI = NS = None
 
