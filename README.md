@@ -1,9 +1,12 @@
 python-ucdev
 ============
 
-Python library to access Cypress CY7C65211 USB-to-GPIO/SPI/I2C chip.
-Also includes library to access Nordic nRF24L01 wireless tranceiver
-over (USB-to-)SPI interface.
+Python library to access Cypress CY7C65211 USB-Serial bridge (USB to GPIO/SPI/I2C) chip.
+Also includes library to access various I2C/SPI chips. Currently includes driver for
+
+- Nordic nRF24L01 wireless tranceiver (SPI)
+- InvenSense MPU-6050 3-axis accelerometer + 3-axis gyroscope (I2C)
+- Honeywell HMC5883L 3-axis magnetometer (I2C)
 
 ## Usage (CY7C65211)
 
