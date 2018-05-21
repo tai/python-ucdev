@@ -1,7 +1,7 @@
 python-ucdev
 ============
 
-Python library to access Cypress CY7C6521x (CY7C65211, CY7C65213, or CY7C65215) USB-Serial bridge (USB to GPIO/SPI/I2C) chip.
+Python library to access Cypress CY7C6521x (CY7C65211, CY7C65213, or CY7C65215) USB-Serial bridge (USB to UART/I2C/SPI/GPIO) chip.
 Also includes library to access various I2C/SPI chips. Currently includes driver for
 
 - Nordic nRF24L01 wireless tranceiver (SPI)
