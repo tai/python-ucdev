@@ -249,13 +249,13 @@ if __name__ == "__main__":
     sys.excepthook = handle_exception
 
     REG = Register("FOO:3 :1 BAR:4", 0x12)
-    print REG
-    print REG.FOO
-    print REG.BAR
+    print(REG)
+    print(REG.FOO)
+    print(REG.BAR)
 
     reg = REG(0xAC)
-    print reg
-    print reg.FOO
-    print reg.BAR
+    print(reg)
+    print(reg.FOO)
+    print(reg.BAR)
 
     embed()

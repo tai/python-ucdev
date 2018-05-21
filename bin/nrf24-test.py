@@ -18,6 +18,8 @@ Cypress       nRF24L01
 
 """
 
+from __future__ import print_function
+
 import sys, os
 import time
 from threading import *
@@ -47,7 +49,7 @@ def pingpong(rx, tx, msg):
     tx.send(msg.ljust(32))
     time.sleep(1)
     got = rx.recv()
-    print "RX:", got
+    print("RX:", got)
 
 ##
 ## Test to run multithreaded send/recv test
@@ -61,7 +63,7 @@ def pingpong_th(rx, tx, msg):
 
             got = rx.recv()
             if got:
-                print "RX:", got
+                print("RX:", got)
 
     def run_tx(tx):
         count = 3
@@ -93,7 +95,7 @@ def init(rx, tx, pipe=0xB3B4B5B6C3, freq=2405):
     rx.RX_ADDR_P1 = pipe
 
     tx.RF_CH = rx.RF_CH = freq - 2400
-    print "Using F0 ={0}Mhz".format(freq)
+    print("Using F0 ={0}Mhz".format(freq))
 
 ######################################################################
 

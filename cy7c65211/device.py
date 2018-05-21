@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import sys, os
 import platform
 from cffi import FFI
@@ -194,7 +196,7 @@ class CyI2C(SPI):
         rc = dev.CyI2cRead(cfg, rcdb, timeout)
 
         if self.debug:
-            print "r:", " ".join(["{:08b}".format(i) for i in rbuf])
+            print("r:", " ".join(["{:08b}".format(i) for i in rbuf]))
 
         return bytearray(ffi.buffer(rcdb.buffer, rcdb.transferCount)[0:])
 
@@ -268,14 +270,14 @@ class CySPI(SPI):
         rcdb = ffi.new("CY_DATA_BUFFER *", (rbuf, rlen, 0))
 
         if self.debug:
-            print "w:", " ".join(["{:08b}".format(i) for i in wbuf])
+            print("w:", " ".join(["{:08b}".format(i) for i in wbuf]))
 
         self.CSN = 1
         rc = dev.CySpiReadWrite(rcdb, wcdb, timeout)
         self.CSN = 0
 
         if self.debug:
-            print "r:", " ".join(["{:08b}".format(i) for i in rbuf])
+            print("r:", " ".join(["{:08b}".format(i) for i in rbuf]))
 
         return bytearray(ffi.buffer(rcdb.buffer, rcdb.transferCount)[0:])
 
