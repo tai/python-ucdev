@@ -394,10 +394,11 @@ class nRF24(nRF24API):
         self.flush()
 
     def recv(self, length=None):
-        if not self.FIFO_STATUS.RX_EMPTY:
-            if length is None:
-                ret, length = self.R_RX_PL_WID()
-            return self.R_RX_PAYLOAD(length)
+        if self.FIFO_STATUS.RX_EMPTY:
+            return None,None
+        if length is None:
+            ret, length = self.R_RX_PL_WID()
+        return self.R_RX_PAYLOAD(length)
 
 def add_register(cls):
     def makeprop(reg):
