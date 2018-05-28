@@ -53,15 +53,14 @@ def main(ctx):
 
     # recv loop
     while True:
-        ret = rf.recv()
-        if ret:
-            rc, buf = ret
-            if rc.RX_DR and buf:
-                sys.stdout.write(buf)
+        time.sleep(0.1)
+        rc, buf = rf.recv()
+        if rc and rc.RX_DR and buf:
+            sys.stdout.write(buf)
 
 if __name__ == '__main__' and '__file__' in globals():
     ap = ArgumentParser()
-    ap.add_argument('--loglevel', metavar='LV',  default='DEBUG')
+    ap.add_argument('--log', metavar='LV',  default='DEBUG')
     ap.add_argument('--vid', metavar='VID', default='0x04b4')
     ap.add_argument('--pid', metavar='PID', default='0x0004')
     ap.add_argument('--nth', metavar='N', type=int)
@@ -74,6 +73,6 @@ if __name__ == '__main__' and '__file__' in globals():
     ctx.opt = ap.parse_args()
 
     # setup logger
-    logging.basicConfig(level=eval('logging.' + ctx.opt.loglevel))
+    logging.basicConfig(level=eval('logging.' + ctx.opt.log))
 
     main(ctx)
