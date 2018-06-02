@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-To run and test this script, you must have 2 sets of CY7C65211+nRF24L01
-pairs. One is used as a transmitter, and another is used as a receiver.
+usage = """
+nRF24 test carrier wave
 
-Connection betwen CY7C65211 and nRF24L01 must be done as below:
+To run and test this script, connection betwen CY7C65211 and nRF24L01
+must be done as below:
 
 Cypress       nRF24L01
 ----------------------
@@ -18,106 +18,60 @@ Cypress       nRF24L01
 
 """
 
-from __future__ import print_function
-
-import sys, os
+import os
+import sys
 import time
-from threading import *
+
+from argparse import ArgumentParser
+from ucdev.cy7c65211 import *
+from ucdev.nrf24 import *
+
+import logging
+log = logging.getLogger(__name__)
+
 from IPython import embed
 
-from cy7c65211 import *
-from nrf24 import *
+def find_dev(ctx):
+    dll = os.getenv("CYUSBSERIAL_DLL") or "cyusbserial"
+    lib = CyUSBSerial(lib=dll)
+    found = list(lib.find(vid=ctx.opt.vid, pid=ctx.opt.pid))
+    return found[ctx.opt.nth]
 
-##
-## Test to make nRF24 run under test mode, which continuously
-## generate carrier signal.
-##
-def carrier(tx, seconds=3, freq=2405):
-    tx.reset(MODE_TEST)
-    tx.RF_CH = freq - 2400
+def main(ctx):
+    dev = find_dev(ctx)
+    io = CyGPIO(dev)
+    rf = nRF24(CySPI(dev), CE=io.pin(0), IRQ=io.pin(1))
 
-    t0 = time.time()
-    td = 0
-    while seconds <= 0 or td < seconds:
-        tx.send()
-        td = time.time() - t0
+    # set carrier wave test mode
+    rf.reset(MODE_TEST)
 
-##
-## Test to run one-time only send/recv test
-##
-def pingpong(rx, tx, msg):
-    tx.send(msg.ljust(32))
-    time.sleep(1)
-    got = rx.recv()
-    print("RX:", got)
+    log.info("Carrier wave at {ctx.opt.freq}[MHz]".format(**locals()))
+    rf.RF_CH = ctx.opt.freq - 2400
+    rf.CE = 1
 
-##
-## Test to run multithreaded send/recv test
-##
-def pingpong_th(rx, tx, msg):
-    def run_rx(rx):
-        rx.quit = False
-        while not rx.quit:
-            while rx.FIFO_STATUS.RX_EMPTY and not rx.quit:
-                time.sleep(1)
+    # loop
+    while True:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        time.sleep(1)
 
-            got = rx.recv()
-            if got:
-                print("RX:", got)
+def to_int(v):
+    return int(v, 0)
 
-    def run_tx(tx):
-        count = 3
-        while count > 0:
-            count -= 1
-            time.sleep(1)
-            if tx.FIFO_STATUS.TX_EMPTY:
-                tx.send(msg.ljust(32))
-            else:
-                tx.flush()
+if __name__ == '__main__' and '__file__' in globals():
+    ap = ArgumentParser()
+    ap.add_argument('-D', '--debug', default='INFO')
+    ap.add_argument('-V', '--vid', type=to_int, default=0x04b4)
+    ap.add_argument('-P', '--pid', type=to_int, default=0x0004)
+    ap.add_argument('-n', '--nth', type=int)
+    ap.add_argument('-f', '--freq', type=int, default=2405)
+    ap.add_argument('args', nargs='*')
 
-    rt = Thread(target=run_rx, args=(rx,))
-    rt.start()
+    # parse args
+    ctx = lambda:0
+    ctx.opt = ap.parse_args()
 
-    st = Thread(target=run_tx, args=(tx,))
-    st.start()
+    # setup logger
+    logging.basicConfig(level=eval('logging.' + ctx.opt.debug))
 
-    st.join
-
-##
-## Initialize devices as transmitter/receiver.
-##
-def init(rx, tx, pipe=0xB3B4B5B6C3, freq=2405):
-    tx.reset(MODE_ESB|DIR_SEND)
-    rx.reset(MODE_ESB|DIR_RECV)
-
-    tx.TX_ADDR    = pipe
-    tx.RX_ADDR_P0 = pipe
-    rx.RX_ADDR_P1 = pipe
-
-    tx.RF_CH = rx.RF_CH = freq - 2400
-    print("Using F0 ={0}Mhz".format(freq))
-
-######################################################################
-
-#dll = "c:/app/Cypress/Cypress-USB-Serial/library/lib/cyusbserial.dll"
-dll = "cyusbserial"
-lib = CyUSBSerial(lib = dll)
-
-rxd, txd = list(lib.find(vid=0x04b4))
-
-rp = CyGPIO(rxd)
-tp = CyGPIO(txd)
-rx = nRF24(CySPI(rxd), CE=rp.pin(0), IRQ=rp.pin(1))
-tx = nRF24(CySPI(txd), CE=tp.pin(0), IRQ=tp.pin(1))
-
-## Initialize devices with given MAC
-init(rx, tx, pipe=0xB3B4B5B6C2)
-
-## data to send/recv
-msg = "hello, nrf24"
-
-#carrier(tx)
-#pingpong(rx, tx, msg)
-pingpong_th(rx, tx, msg)
-
-embed()
+    main(ctx)
