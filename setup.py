@@ -5,7 +5,7 @@ setup(name='ucdev',
       url='https://github.com/tai/python-ucdev/',
       author='Taisuke Yamada',
       author_email='tai@remove-if-not-spam.rakugaki.org',
-      license='Python',
+      license='MIT',
       packages=['ucdev'],
       install_requires=[
           'bitstring',
