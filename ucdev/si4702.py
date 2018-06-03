@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8-unix -*-
 """
 I2C driver for Si4702 FM radio tuner chip.
