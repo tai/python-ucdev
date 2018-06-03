@@ -2,19 +2,19 @@ python-ucdev
 ============
 
 Python library to access Cypress CY7C6521x (CY7C65211, CY7C65213, or CY7C65215) USB-Serial bridge (USB to UART/I2C/SPI/GPIO) chip.
-Also includes library to access various I2C/SPI chips. Currently includes driver for
+Also includes library to access various chips over I2C/SPI. Currently includes driver for
 
 - Nordic nRF24L01 wireless tranceiver (SPI)
 - InvenSense MPU-6050 3-axis accelerometer + 3-axis gyroscope (I2C)
 - Honeywell HMC5883L 3-axis magnetometer (I2C)
+- Si4702 FM radio receiver (I2C for now, additional SPI-mode ongoing)
 
 ## Usage (CY7C6521x)
 
     >>> from cy7c65211 import CyUSBSerial, CyGPIO, CySPI
     >>> 
     >>> # load DLL provided by Cypress
-    >>> dll = "c:/path/to/Cypress-USB-Serial/library/lib/cyusbserial.dll"
-    >>> lib = CyUSBSerial(lib = dll)
+    >>> lib = CyUSBSerial(lib="cyusbserial")
     >>>
     >>> # use first device found
     >>> dev = lib.find().next()
@@ -50,5 +50,5 @@ This requires cyusbserial.dll (or libcyusbserial.so) library
 provided by Cypress.
 
 Current development focuses on GPIO and SPI features to
-use Nordic nRF24 wireless tranceiver chip. See sample script
-nrf24-test.py for the detail.
+use Nordic nRF24 wireless tranceiver chip. See sample scripts
+under bin/ folder for the detail.
