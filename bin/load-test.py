@@ -13,8 +13,8 @@ import time
 from threading import *
 from IPython import embed
 
-from cy7c65211 import *
-from nrf24 import *
+from ucdev.cy7c65211 import *
+from ucdev.nrf24 import *
 
 dll = "cyusbserial"
 lib = CyUSBSerial(lib = dll)

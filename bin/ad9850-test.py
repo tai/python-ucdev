@@ -18,8 +18,8 @@ import sys, os
 import time
 from IPython import embed
 
-from cy7c65211 import *
-from ad9850 import *
+from ucdev.cy7c65211 import *
+from ucdev.ad9850 import *
 
 #dll = "c:/app/Cypress/Cypress-USB-Serial/library/lib/cyusbserial.dll"
 dll = "cyusbserial"
