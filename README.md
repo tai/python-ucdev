@@ -11,7 +11,7 @@ Also includes library to access various chips over I2C/SPI. Currently includes d
 
 ## Usage (CY7C6521x)
 
-    >>> from cy7c65211 import CyUSBSerial, CyGPIO, CySPI
+    >>> from ucdev.cy7c65211 import CyUSBSerial, CyGPIO, CySPI
     >>> 
     >>> # load DLL provided by Cypress
     >>> lib = CyUSBSerial(lib="cyusbserial")
@@ -35,7 +35,7 @@ Also includes library to access various chips over I2C/SPI. Currently includes d
 
 ## Usage (nRF24L01)
 
-    >>> from nrf24 import *
+    >>> from ucdev.nrf24 import *
     >>> 
     >>> tx = nRF24(CySPI(dev), CE=CyGPIO(dev).pin(0))
     >>> tx.reset(MODE_SB|DIR_SEND)
