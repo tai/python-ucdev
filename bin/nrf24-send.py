@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8-unix -*-
 
 usage = """
 To run and test this script, connection betwen CY7C65211 and nRF24L01
@@ -16,67 +16,80 @@ Cypress       nRF24L01
 
 """
 
+import os
 import sys
 import time
 
 from argparse import ArgumentParser
-from cy7c65211 import *
-from nrf24 import *
+from ucdev.cy7c65211 import CyUSBSerial, CyGPIO, CySPI
+from ucdev.nrf24 import *
 
 import logging
 log = logging.getLogger(__name__)
 
 from IPython import embed
 
+def find_dev(ctx):
+    dll = os.getenv("CYUSBSERIAL_DLL") or "cyusbserial"
+    lib = CyUSBSerial(lib=dll)
+    found = list(lib.find(vid=ctx.opt.vid, pid=ctx.opt.pid))
+    return found[ctx.opt.nth]
+
 def main(ctx):
-    dll = "cyusbserial"
-    lib = CyUSBSerial(lib = dll)
-
-    # find device
-    found = list(lib.find(vid=int(ctx.opt.vid, 16), pid=int(ctx.opt.pid, 16)))
-
-    if len(found) < 1:
-        log.warn("No device found.")
-        sys.exit(1)
-    elif len(found) > 1 and ctx.opt.nth is None:
-        log.warn("Found multiple devices. Use --nth option to specify one.")
-        sys.exit(1)
-    dev = found[ctx.opt.nth if ctx.opt.nth else 0]
-
-    # setup
+    dev = find_dev(ctx)
     io = CyGPIO(dev)
     rf = nRF24(CySPI(dev), CE=io.pin(0), IRQ=io.pin(1))
 
-    rf.reset(MODE_ESB|DIR_SEND)
-    rf.TX_ADDR    = int(ctx.opt.addr, 16)
-    rf.RX_ADDR_P0 = int(ctx.opt.addr, 16)
-    rf.RF_CH      = ctx.opt.freq - 2400
+    # set basic mode
+    mode  = DIR_SEND
+    mode |= eval("MODE_%s" % ctx.opt.mode.upper())
+    if ctx.opt.rate:
+        mode |= eval("RATE_%s" % ctx.opt.rate.upper())
+    rf.reset(mode)
+
+    # set address and channel
+    for i,addr in enumerate(ctx.opt.rx):
+        log.debug("RX_ADDR_P{i}: {addr:010X}".format(**locals()))
+        setattr(rf, "RX_ADDR_P" + str(i), addr)
+    log.debug("TX_ADDR: {ctx.opt.tx:010X}".format(**locals()))
+    rf.TX_ADDR = ctx.opt.tx
+    rf.RF_CH   = ctx.opt.freq - 2400
 
     # send loop
     buf = sys.stdin.read(32)
-    while buf is not None:
-        if buf:
-            while not rf.FIFO_STATUS.TX_EMPTY:
-                rf.flush()
-                time.sleep(0.01)
-            rf.send(buf)
+    while buf:
+        while not rf.FIFO_STATUS.TX_EMPTY:
+            rf.flush()
+        rf.send(buf)
+        sys.stdout.write('.')
+        sys.stdout.flush()
         buf = sys.stdin.read(32)
+
+def to_int(v):
+    return int(v, 0)
 
 if __name__ == '__main__' and '__file__' in globals():
     ap = ArgumentParser()
-    ap.add_argument('--log', metavar='LV',  default='DEBUG')
-    ap.add_argument('--vid', metavar='VID', default='0x04b4')
-    ap.add_argument('--pid', metavar='PID', default='0x0004')
-    ap.add_argument('--nth', metavar='N', type=int)
-    ap.add_argument('--addr', metavar='ADDR', default='0xB3B4B5B6C2')
-    ap.add_argument('--freq', metavar='FREQ', type=int, default=2405)
+    ap.add_argument('-D', '--debug', default='INFO')
+    ap.add_argument('-V', '--vid', type=to_int, default=0x04b4)
+    ap.add_argument('-P', '--pid', type=to_int, default=0x0004)
+    ap.add_argument('-n', '--nth', type=int)
+    ap.add_argument('-T', '--tx', type=to_int, default=0xE7E7E7E7E7)
+    ap.add_argument('-R', '--rx', action='append', type=to_int, default=[])
+    ap.add_argument('-f', '--freq', type=int, default=2405)
+    ap.add_argument('-m', '--mode', default='SB')
+    ap.add_argument('-r', '--rate')
     ap.add_argument('args', nargs='*')
 
     # parse args
     ctx = lambda:0
     ctx.opt = ap.parse_args()
 
+    # NOTE: TX_ADDR and RX_ADDR_P0 must be same in ESB mode
+    if ctx.opt.mode == 'ESB' and not ctx.opt.rx:
+        ctx.opt.rx = [ctx.opt.tx]
+
     # setup logger
-    logging.basicConfig(level=eval('logging.' + ctx.opt.log))
+    logging.basicConfig(level=eval('logging.' + ctx.opt.debug))
 
     main(ctx)
